@@ -1,0 +1,52 @@
+# CSC 519 Project
+### "Ensuring Quality of Service"
+Author: Quaker Schneider (hdschnei@ncsu.edu)
+
+# Problem Statement
+
+Frequently, web applications will be in the business of serving a set of users. (Shocking, I know.)
+
+Load might come intermittently for a client using our API. An e-commerce shop on our platform might gain sudden viral popularity. A user on our site might be making a big batch of changes. Whatever the case is, we are faced with a problem: how do we balance the needs of that high-demand user against the usability of the application as a whole?
+
+One approach is to do nothing. How this will play out depends on your server architecture. If you have one host, it will likely slow down dramatically. If you have a load balancer, the effects of this traffic uptick will depend on what balancing algorithm you use.
+
+Load balancers usually try their best to evenly distribute traffic, but this doesn't do a good job of balancing the needs of all users. If one overloads the system, everyone pays the price.
+
+Thus comes my pipeline as a solution to this issue. Central to it is the custom load balancer implementation, which enables both continuous deployment and load isolation techniques in order to ensure that quality of service is maintained at all times for the end users of our application.
+
+# Pipeline design
+### System Overview
+![DEVOPS 519 Project Overview](https://media.github.ncsu.edu/user/22132/files/59918f4b-02b6-4a24-a20c-b2e243068632)
+
+### Deployment Architecture
+![DEVOPS 519 Project Flow 1](https://media.github.ncsu.edu/user/22132/files/a6e82aad-9c7f-4f81-a066-4a858f0244ac)
+
+## Continuous (Piecewise) Deployment
+Continuous deployment is handled through partitioning hosts and installing new releases on half of the host space at a time. Quality may degrade for a few minutes across the whole system, but that is a signficant improvement over having system downtime. Especially if these updates occur during periods of low load, this quality may not degrade noticeably.
+
+![DEVOPS 519 Project Flow 2](https://media.github.ncsu.edu/user/22132/files/5f0fa356-7319-4a49-a261-d0a0d3b36595)
+
+## Load Isolation
+Through combining a twofold approach to load balancing, we can partition requests into static, hashed routing (where the same agent's requests always end up at the same host) and dynamic, least-latency routing (which evenly distributes load across hosts). This swapover triggers at a cutoff point, which can be scaled in production should testing indicate a different coefficient is approprate.  
+
+![DEVOPS 519 Project Load](https://media.github.ncsu.edu/user/22132/files/651ea569-063b-4a83-8c08-c1973c818097)
+
+# Use Case: Code Deployment
+```
+1 Preconditions
+   Devops Infrarstructure provisioned and deployed.
+   Application hosts provisioned and deployed.
+2 Main Flow
+   Developer will initiate the pipeline by making sequential PRs--first to main[S1], and then to a release branch with tag[S3].  
+   Tests and linting run on the initial PR to main[S2]. Release is deployed in a half-half structure to the application hosts. 
+   Monitoring of latency post-deployment is available[S4].
+3 Subflows
+  [S1] User provides PR message and requests appropriate reviewers.
+  [S2] GitHub actions creates test environment and tests code, in parallel with a linter.
+  [S3] User provides PR message and requests appropriate reviewers (including the Release Engineer).
+  [S4] The load balancer will provide a secure endpoint for monitoring of response times and host health.
+4 Alternative Flows
+  [E1] Test suite fails in PR to main.
+  [E2] Linting fails in PR to main.
+  [E3] Release-deployed hosts are unresponsive.
+```
