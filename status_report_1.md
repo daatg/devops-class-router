@@ -2,7 +2,7 @@
   Summarize in a few bullet points the progress you've made towards implementing your Continuous Deployment pipeline. Link to 1 non-trivial GitHub commit per person that demonstrate progress toward your accomplishments.
   - Added initial load-balancer setup (in `/router`)
     - Settled barebones tech stack: `actix-web` server + `awc` client for reverse proxy
-    - See 0c268386f502a475d05105237d7cebf0200fa22d
+    - See [0c268386f502a475d05105237d7cebf0200fa22d](https://github.ncsu.edu/hdschnei/CSC-519-project/commit/0c268386f502a475d05105237d7cebf0200fa22d)
   - Added initial setup for linter on Github Actions
 
 ## Next Steps:
