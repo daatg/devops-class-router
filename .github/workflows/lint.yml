@@ -1,0 +1,11 @@
+name: lint
+on: 
+  pull_request:
+    types: [opened, reopened]
+jobs:
+  this-is-a-job-name:
+    runs-on: self-hosted
+    steps:
+      - run: |
+          cd router
+          cargo clippy
