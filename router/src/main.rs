@@ -6,6 +6,7 @@ use actix_web::{
     dev::PeerAddr, error, middleware, web, App, Error, HttpRequest, HttpResponse, HttpServer,
 };
 use awc::Client;
+use clap::Parser;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, VecDeque};
 use std::hash::Hash;
@@ -26,6 +27,7 @@ enum RoutingStrategy {
     MovingAverage,
 }
 
+const HOST_FILE: &str = "hosts.yaml";
 const AVERAGE_WINDOW: Duration = Duration::from_secs(2);
 const GRACE_REQUESTS: usize = 1;
 const TIMEOUT_THRESHHOLD: Duration = Duration::from_millis(500);
@@ -325,9 +327,31 @@ fn pick_strategy(
     routing_strategy
 }
 
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Port to receive HTTP traffic on
+    #[arg(short, long, default_value_t = 8080)]
+    receive_port: u16,
+    /// Port to receive HTTP traffic on
+    #[arg(short, long, default_value_t = 3000)]
+    send_port: u16,
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     pretty_env_logger::init();
+    let args = Args::parse();
+    let f = std::fs::File::open(HOST_FILE)?;
+    let data: serde_yaml::Value = serde_yaml::from_reader(f)
+        .map_err(|err| std::io::Error::new(std::io::ErrorKind::NotFound, err))?;
+    let yaml_hosts = data["apphost"]["hosts"]
+        .as_mapping()
+        .ok_or(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("Failed to parse mapping from {}", HOST_FILE),
+        ))?;
+    let mut hosts: Vec<Url> = Vec::new();
     fn get_host(url: &str, port: u16) -> Url {
         let forward_socket_addr = (url, port)
             .to_socket_addrs()
@@ -338,12 +362,16 @@ async fn main() -> std::io::Result<()> {
         let forward_url = format!("http://{forward_socket_addr}");
         Url::parse(&forward_url).unwrap()
     }
+    for host_tuple in yaml_hosts.iter() {
+        hosts.push(get_host(
+            host_tuple.0.as_str().ok_or(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Failed to parse mapping from {}", HOST_FILE),
+            ))?,
+            args.send_port,
+        ));
+    }
     HttpServer::new(move || {
-        let hosts = vec![
-            get_host("127.0.0.1", 3000),
-            get_host("127.0.0.1", 3001),
-            get_host("127.0.0.1", 3002),
-        ];
         let pool_count = RwLock::new(0 as isize);
         let mut times: Vec<RwLock<VecDeque<ResponseInfo>>> = Vec::new();
         let mut averages: Vec<RwLock<Duration>> = Vec::new();
@@ -355,7 +383,7 @@ async fn main() -> std::io::Result<()> {
             RwLock::new(HashMap::new());
         App::new()
             .app_data(web::Data::new(Client::default()))
-            .app_data(web::Data::new(hosts))
+            .app_data(web::Data::new(hosts.clone()))
             .app_data(web::Data::new(pool_count))
             .app_data(web::Data::new(times))
             .app_data(web::Data::new(averages))
@@ -363,7 +391,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .default_service(web::to(forward))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("127.0.0.1", args.receive_port))?
     .workers(2)
     .run()
     .await
