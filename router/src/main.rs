@@ -101,15 +101,19 @@ async fn forward(
     agent_requests: web::Data<RwLock<HashMap<String, RwLock<VecDeque<Instant>>>>>,
 ) -> Result<HttpResponse, Error> {
     // TODO: parse the agent from the request body/headers
-    let agent = "Test 123";
-    let routing_strategy = pick_strategy(agent, &agent_requests, &pool_count, &hosts);
+    let agent = String::from(match req.peer_addr() {
+        Some(v) => String::from(v.ip().to_string()),
+        None => String::from("anonymous"),
+    });
+    info!("Received request from user agent \"{agent}\":");
+    let routing_strategy = pick_strategy(&agent, &agent_requests, &pool_count, &hosts);
     let excludes: Vec<usize> = Vec::new();
 
     forward_request(
         routing_strategy,
         &excludes,
         hosts,
-        agent,
+        &agent,
         averages,
         req,
         client,
@@ -333,7 +337,7 @@ struct Args {
     /// Port to receive HTTP traffic on
     #[arg(short, long, default_value_t = 8080)]
     receive_port: u16,
-    /// Port to receive HTTP traffic on
+    /// Port to send HTTP traffic to
     #[arg(short, long, default_value_t = 3000)]
     send_port: u16,
 }
@@ -370,6 +374,10 @@ async fn main() -> std::io::Result<()> {
             ))?,
             args.send_port,
         ));
+        info!(
+            "Found new app host {}",
+            hosts.get(hosts.len() - 1).unwrap().to_string()
+        );
     }
     HttpServer::new(move || {
         let pool_count = RwLock::new(0 as isize);
