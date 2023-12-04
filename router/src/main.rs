@@ -335,10 +335,10 @@ fn pick_strategy(
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Port to receive HTTP traffic on
-    #[arg(short, long, default_value_t = 8080)]
+    #[arg(short, long, default_value_t = 80)]
     receive_port: u16,
     /// Port to send HTTP traffic to
-    #[arg(short, long, default_value_t = 3000)]
+    #[arg(short, long, default_value_t = 80)]
     send_port: u16,
 }
 
@@ -400,7 +400,6 @@ async fn main() -> std::io::Result<()> {
             .default_service(web::to(forward))
     })
     .bind(("127.0.0.1", args.receive_port))?
-    .workers(2)
     .run()
     .await
 }

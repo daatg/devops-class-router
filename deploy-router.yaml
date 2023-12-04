@@ -1,0 +1,27 @@
+---
+- name: Deploy Router
+  hosts: router
+  become: yes
+  become_method: sudo
+  tasks:
+        
+    - name: Copy router binary
+      copy:
+        src: router/target/release/router
+        dest: router/router
+        
+    - name: Copy hosts.yaml
+      copy:
+        src: hosts.yaml
+        dest: router/hosts.yaml
+
+    - name: Run router
+      shell: "RUST_LOG=info router"
+      args:
+        chdir: router/
+      async: 1000
+      poll: 0
+
+    - name: Expose port 80 with iptables
+      shell: 
+        "sudo iptables -I INPUT -p tcp -m tcp --dport 80 -j ACCEPT"
