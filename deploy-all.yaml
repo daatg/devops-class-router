@@ -1,0 +1,6 @@
+---
+- name: Deploy Router and App
+  hosts: router:apphost
+      
+- import_playbook: deploy-apphosts.yaml
+- import_playbook: deploy-router.yaml

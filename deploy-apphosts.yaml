@@ -1,0 +1,70 @@
+---
+- name: Deploy App Hosts
+  hosts: apphost
+  become: yes
+  become_method: sudo
+  tasks:
+
+    - name: Install docker's dependencies
+      apt:
+        name: "{{item}}"
+        state: present
+        update_cache: yes
+      loop:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg-agent
+        - software-properties-common
+
+    - name: Add GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add docker repository to apt
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu bionic stable
+        state: present
+        
+    - name: Install docker
+      apt:
+        name: "{{item}}"
+        state: latest
+        update_cache: yes
+      loop:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+
+    - name: Check that the docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Ensure group "docker" exists
+      ansible.builtin.group:
+        name: docker
+        state: present
+        
+    - name: Install app files
+      copy:
+        src: coffee-project/
+        dest: coffee-project/
+
+    - name: Build docker image
+      shell: docker build . --tag app
+      args:
+        chdir: coffee-project/
+
+    - name: Run docker image
+      shell: docker run -p 80:3000 app
+      args:
+        chdir: coffee-project/
+      async: 1000
+      poll: 0
+
+    - name: Expose port 80 with iptables
+      shell: 
+        "sudo iptables -I INPUT -p tcp -m tcp --dport 80 -j ACCEPT"
