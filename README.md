@@ -5,10 +5,15 @@ Author: Quaker Schneider (hdschnei@ncsu.edu)
 # Addendum for Final Submission
 
 `/router/` - contains the Rust load-balancer application and associated files.
-`/coffee-project/` - contains the Coffee web app and Docker containerization
+
+`/coffee-project/` - contains the Coffee web app and Docker containerization.
+
 `/.github/workflows/` contains the github Actions workflows, which require the setup of self-hosted runners. I could not get my VCL instances to run these properly.
+
 Ansible playbooks are contained top-level, and split into app deployment and router deployment. `deploy-all.yaml` does what it says on the tin.
+
 To run `deploy-all.yaml`, there is a Dockerfile top-level that can be built via `docker build . --tag deploy`. To run it, run `docker run -v {PATH TO YOUR SSH FOLDER}:/root/.ssh deploy`.
+
 Lastly, to test the router locally, enter the `/router/` subdirectory and run `RUST_LOG=info cargo run`.
 
 # Problem Statement
