@@ -1,16 +1,13 @@
-name: lint
+name: test
 on: 
   pull_request:
     types: [opened, reopened]
 jobs:
-  build:
+  npm_test_scripts:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16.x'
+      - uses: actions/setup-node@v3
       - run: cd coffee-project
       - run: npm ci
       - run: npm run build --if-present
