@@ -2,10 +2,14 @@ name: lint
 on: 
   pull_request:
     types: [opened, reopened]
+env:
+  RUSTFLAGS: "-Dwarnings"
 jobs:
-  this-is-a-job-name:
+  clippy-lint:
     runs-on: self-hosted
     steps:
-      - run: |
+      - uses: actions/checkout@v3
+      - name: Run Clippy
+        run: |
           cd router
           cargo clippy
