@@ -2,16 +2,12 @@ name: lint
 on: 
   pull_request:
     types: [opened, reopened]
-env:
-  RUSTFLAGS: "-Dwarnings"
 jobs:
-  clippy-lint:
+  npm-eslint:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
-      - name: Install Clippy
-        run: rustup component add clippy
-      - name: Run Clippy
-        run: |
-          cd router
-          cargo clippy
+      - run: |
+          cd coffee-project
+          npm init @eslint/config
+          ./node_modules/.bin/eslint .
