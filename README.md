@@ -1,4 +1,4 @@
-# CSC 519 Project
+# DevOps Final Project
 ### "Ensuring Quality of Service"
 Author: Quaker Schneider (hdschnei@ncsu.edu)
 
