@@ -30,20 +30,20 @@ Thus comes my pipeline as a solution to this issue. Central to it is the custom 
 
 # Pipeline design
 ### System Overview
-![DEVOPS 519 Project Overview](https://media.github.ncsu.edu/user/22132/files/59918f4b-02b6-4a24-a20c-b2e243068632)
+![DEVOPS Project Overview](https://media.github.ncsu.edu/user/22132/files/59918f4b-02b6-4a24-a20c-b2e243068632)
 
 ### Deployment Architecture
-![DEVOPS 519 Project Flow 1](https://media.github.ncsu.edu/user/22132/files/a6e82aad-9c7f-4f81-a066-4a858f0244ac)
+![DEVOPS Project Flow 1](https://media.github.ncsu.edu/user/22132/files/a6e82aad-9c7f-4f81-a066-4a858f0244ac)
 
 ## Continuous (Piecewise) Deployment
 Continuous deployment is handled through partitioning hosts and installing new releases on half of the host space at a time. Quality may degrade for a few minutes across the whole system, but that is a signficant improvement over having system downtime. Especially if these updates occur during periods of low load, this quality may not degrade noticeably.
 
-![DEVOPS 519 Project Flow 2](https://media.github.ncsu.edu/user/22132/files/5f0fa356-7319-4a49-a261-d0a0d3b36595)
+![DEVOPS Project Flow 2](https://media.github.ncsu.edu/user/22132/files/5f0fa356-7319-4a49-a261-d0a0d3b36595)
 
 ## Load Isolation
 Through combining a twofold approach to load balancing, we can partition requests into static, hashed routing (where the same agent's requests always end up at the same host) and dynamic, least-latency routing (which evenly distributes load across hosts). This swapover triggers at a cutoff point, which can be scaled in production should testing indicate a different coefficient is approprate.  
 
-![DEVOPS 519 Project Load](https://media.github.ncsu.edu/user/22132/files/651ea569-063b-4a83-8c08-c1973c818097)
+![DEVOPS Project Load](https://media.github.ncsu.edu/user/22132/files/651ea569-063b-4a83-8c08-c1973c818097)
 
 # Use Case: Code Deployment
 ```
